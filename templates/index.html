@@ -1,0 +1,201 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゴルフプラン検索</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .error { 
+            color: red; 
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+        }
+        .search-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .golf-course {
+            background: white;
+            border-radius: 8px;
+            margin: 20px 0;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .course-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .course-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .course-info {
+            flex-grow: 1;
+        }
+        .course-info h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .course-description {
+            font-size: 0.9em;
+            color: #666;
+            margin: 10px 0;
+        }
+        .access-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .plans {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .plan {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .plan:last-child {
+            border-bottom: none;
+        }
+        .rating {
+            background: #ff9800;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .price {
+            color: #e33;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .stock-status {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .reserve-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .reserve-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>ゴルフプラン検索</h1>
+    
+    <form method="POST" class="search-form">
+        <div class="form-group">
+            <label for="play_date">プレー日:</label>
+            <input type="date" id="play_date" name="play_date" required
+                   min="{{ default_date }}" value="{{ selected_date }}">
+        </div>
+        <div class="form-group">
+            <label for="area_code">エリア:</label>
+            <select id="area_code" name="area_code" required>
+                {% for area_name, code in areas.items() %}
+                <option value="{{ code }}" {% if code == selected_area %}selected{% endif %}>
+                    {{ area_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit">検索</button>
+    </form>
+
+    {% if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    {% if golf_plans %}
+    <div class="results">
+        {% for course in golf_plans %}
+        <div class="golf-course">
+            <div class="course-header">
+                <img src="{{ course.imageUrl }}" alt="{{ course.name }}" class="course-image">
+                <div class="course-info">
+                    <h2>{{ course.name }}</h2>
+                    <p>評価: <span class="rating">{{ course.rating }}</span></p>
+                    <p>エリア: {{ course.prefecture }}</p>
+                    <div class="access-info">
+                        アクセス: {{ course.highway }} {{ course.ic }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="course-description">
+                {{ course.caption[:200] + '...' if course.caption|length > 200 else course.caption }}
+            </div>
+            
+            <div class="plans">
+                <h3>予約可能なプラン</h3>
+                {% for plan in course.plans %}
+                <div class="plan">
+                    <h4>{{ plan.name }}</h4>
+                    <p>料金: <span class="price">¥{{ plan.price | number_format }}</span></p>
+                    <p>ラウンド: {{ plan.round }} / {{ plan.lunch }}</p>
+                    <p class="stock-status">
+                        残り枠: {{ plan.stock_count }}組
+                    </p>
+                    <a href="{{ plan.reserveUrl }}" target="_blank" class="reserve-btn">予約する</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>
